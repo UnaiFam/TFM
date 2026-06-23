@@ -1,0 +1,10 @@
+DATA/
+MODEL/
+NOTEBOOKS/
+*.pyc
+src/__pycache__
+executemain.py
+__pycache__/
+DOCKERFILE
+requirements.txt
+requirements.yml
