@@ -6,7 +6,8 @@ import plotly.graph_objects as go
 from src.adecuacion import ImagenHyper
 
 
-def identificar_muestras(img):
+def identificar_muestras1(img:ImagenHyper):
+    """Devuelve el n_plasticos, y los objetos que ha encontrado"""
     labels = label(img.mask, connectivity=2)
     props = regionprops(labels)
 
@@ -15,27 +16,56 @@ def identificar_muestras(img):
     return n_plasticos, props
 
 
-def add_spect(a, name, fig):
-    
+def add_spect(wv, espectro, name, fig):
     fig.add_trace(go.Scatter(
-        x=a.WV,
-        y=a,
+        x=wv,
+        y=espectro,
         mode="lines",
-        name=name))
+        name=name
+    ))
 
-def espectros_muestras (props, a):
+
+def espectros_muestras(props, img, preprocesado:str="RAW"):
+    """Enseña el espectro medio de cada muestra que ha encontrado en props.
+    preprcesados disponibles SNV
+
+    
+    
+    """
+
     fig = go.Figure()
-    for k,p in enumerate(props):
+
+    for k, p in enumerate(props):
         rows = p.coords[:, 0]
         cols = p.coords[:, 1]
 
-        espectros = a[rows, cols]      # (N_pixeles, N_bandas)
+        espectros = img.img[rows, cols]
         espectro_medio = espectros.mean(axis=0)
+        match preprocesado.upper():
+            case "RAW":
+                espectro = espectro_medio
 
-        add_spect(espectro_medio, f"Plástico {k+1}")
+            case "SNV":
+                std = espectro_medio.std()
+                if std == 0:
+                    espectro = (espectro_medio - espectro_medio.mean()) / 1e-8
+                else:
+                    espectro = (espectro_medio - espectro_medio.mean()) / std
+
+            case _:
+                raise ValueError(f"Preprocesado '{preprocesado}' no reconocido.")
+ 
+
+        add_spect(img.WV, espectro, f"Plástico {k}", fig)
+
     fig.show()
 
-def identificar_muestras(mascara, props):
+
+
+
+
+def enseñar_muestras(mascara, props):
+    """Genera una figura con el numero de cada muestra. Empezando por 0. Necesita la mascara y el props"""
     fig, ax = plt.subplots(figsize=(10, 30))
     ax.imshow(mascara, cmap="gray")
 
@@ -45,23 +75,30 @@ def identificar_muestras(mascara, props):
 
     plt.show()
 
-def y_prop_label(n):
-
+def y_prop_label_generation(n):
+    """Genera un array con el mismp numero de muestras para labelear."""
     y_prop_label = np.zeros(n, dtype=int)
     return y_prop_label
 
-def combinar_labels(imagen, y_prop_label,props):
+def combinar_labels(imagen: "ImagenHyper", y_prop_label: np.array, props: list):
+    """Añade labels a la imagen. La muestras de clase 0 seran ignoradas."""
+    coords_list = []
+    labels_list = []
 
-    ylabel_list = []
-    coords = []
+    for y_prop, prop in zip(y_prop_label, props):
+        if y_prop == 0:
+            continue
 
-    for n, (clase, prop) in enumerate(zip(y_prop_label, props)):
-        obj_coords = []
+        coords = prop.coords
 
-        for y, x in prop.coords:
-            ylabel_list.append(clase)
-            obj_coords.append([y, x])
+        coords_list.append(coords)
+        labels_list.append(
+            np.full(len(coords), y_prop)
+        )
 
-        coords.append(np.array(obj_coords))
-
-    imagen.add_label(ylabels=ylabel_list, labelled_coords=coords)
+    npcoords = np.concatenate(coords_list, axis=0)
+    ylabel_list = np.concatenate(labels_list, axis=0)
+    imagen.add_label(
+        ylabels=ylabel_list,
+        labelled_coords=npcoords
+    )
