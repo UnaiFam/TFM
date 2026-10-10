@@ -61,7 +61,7 @@ class SIMCA(ClassifierMixin, BaseEstimator):
         scores = self.pca.transform(X)
 
         X_hat = self.pca.inverse_transform(scores)
-
+        self.loadings=self.pca.components_
         E = X - X_hat
 
         q_res = np.sum(E**2, axis=1)
