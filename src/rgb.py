@@ -20,7 +20,7 @@ def img_rgb(X, r_band=250,g_band=0, b_band=100, out=False):
     if out!=False:    return rgb
 
 def imagen_prediccion(y, coords, image_shape, out=False):
-    """Genera"""
+    """Genera una imagen si se le das las los datos en forma de labes, coodenadas [row, col], y forma. """
     H, W = image_shape[:2]
     img = np.zeros((H, W, 3), dtype=np.uint8)
 
@@ -65,6 +65,7 @@ def imagen_prediccion(y, coords, image_shape, out=False):
 
 
 def imagen_labelling(props, y_prop, shape, out=False):
+        """"""
         H,W,B=shape
         img = np.zeros((H, W, 3), dtype=np.uint8)
         colors = {

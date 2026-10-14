@@ -3,7 +3,9 @@ import numpy as np
 from scipy.stats import mode
 
 def binning_mask(mask, factor=2):
-    "Funcion que devuelve array booleano reducido"
+    """
+    cube: (H, W, 1)
+    Devuelve array 2D booleano a reducido"""
     H, W = mask.shape
 
     H2 = (H // factor) * factor
@@ -25,6 +27,7 @@ def binning_hsi(cube, factor=2):
     cube: (H, W, B)
     devuelve: (H//factor, W//factor, B)
     """
+    # Calcula forma del cubo antiguo y del nuevo
     H, W, B = cube.shape
 
     H2 = (H // factor) * factor

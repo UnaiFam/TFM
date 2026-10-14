@@ -5,6 +5,9 @@ import pickle
 
 
 def corrector(ruta_imagen:str,ruta_negro:str,ruta_blanco:str):
+    """Funcion que utiliza busca la ruta de la imagen, del negro y del blanco. 
+    Devuelve un np.array tridimensional y np.array unidimensional de para wavelength.  """
+
     imagen_hiperespectral = sp.open_image(ruta_imagen).load()
 
     # Cargar el cubo completo en memoria
@@ -90,12 +93,15 @@ class ImagenHyper:
         self.is_labeled = True
 
     def _update_mask_data(self):
+        """actualiza llos datos con la mascara nueva"""
         self.masked_coords = np.argwhere(self.mask)
         self.masked_spectra = self.spectra[self.mask.ravel()]
     def add_mask(self, mask):
+        """Añade la mascara"""
         self.mask=np.asarray(mask, bool)
         self._update_mask_data()
     def slicer(self, modo="auto",        fila_ini=None,        fila_fin=None,     col_ini=None,col_fin=None, margin=5):
+        """Hace un recorte rectangular de la imagen"""
         if modo == "manual":
             if None in (fila_ini, fila_fin, col_ini, col_fin):
                 raise ValueError("modo='manual' requiere límites completos")

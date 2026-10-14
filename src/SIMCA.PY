@@ -47,7 +47,7 @@ class SIMCA(ClassifierMixin, BaseEstimator):
         self._class = _class
 
     def fit(self, X, y):
-
+        """Entrena el modelo"""
         # Clases que reconoce el clasificador
         self.classes_ = np.unique(y)
 
@@ -284,6 +284,7 @@ class SIMCA_Multiclass(ClassifierMixin,BaseEstimator ):
         self.max_iter = max_iter
         self.mode=mode
         self.models_ = {}
+
     def fit(self, X, y):
 
         self.classes_ = np.unique(y)
@@ -311,7 +312,11 @@ class SIMCA_Multiclass(ClassifierMixin,BaseEstimator ):
 
         return self
 
-
+    def loadings (self):
+        loadings=[]
+        for model in self.models_.values():
+            loadings.append(model.pca.components_)
+        return loadings 
     def predict(self, X):
         """
         Hard devuelve el array con la clase perteneciente
