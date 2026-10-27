@@ -227,6 +227,6 @@ Dos modos:
 * **"``masked``"**: solo predice zona masceada. Este es el uso recomendado.
 * **`full`**: predice tambien el fondo. Suele funcionar bien pero en ocasiones es practicamente inutil  prediciendo gran parte del fondo como la clase.
 
-![Texto alternativo](img\generated\ejemplo.png)
+![Texto alternativo](img/generated/ejemplo.png)
 
 
