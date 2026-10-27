@@ -18,7 +18,8 @@ class PLSDA(BaseEstimator, ClassifierMixin):
 
     
     def transform(self, X):
-        pass
+        return self.pls.transform(X)
+    
     def fit(self, X, y):
         self.classes_=np.unique(y)
         self.encoder_ = LabelBinarizer()

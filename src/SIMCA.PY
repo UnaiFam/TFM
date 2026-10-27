@@ -286,7 +286,7 @@ class SIMCA_Multiclass(ClassifierMixin,BaseEstimator ):
         self.models_ = {}
 
     def fit(self, X, y):
-
+        """Entrena todos los modelos"""
         self.classes_ = np.unique(y)
 
 

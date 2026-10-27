@@ -42,7 +42,7 @@ def binning_hsi(cube, factor=2):
     ).mean(axis=(1, 3))
 
 def binning(cube:"ImagenHyper", factor:int=2):
-    """ Devuelve una ImagenHyper devuelve: (H//factor, W//factor, B)"""
+    """Devuelve una ImagenHyper devuelve: (H//factor, W//factor, B)"""
     cube1=binning_hsi(cube=cube.img,factor=factor)
     mask1=binning_mask(mask=cube.mask, factor=factor)
     return ImagenHyper(img=cube1,mask=mask1 , WV=cube.WV)

@@ -66,7 +66,7 @@ class ImagenHyper:
     """Clase de datos para imagen hiperespectral. 
     imagen en np.ndarray
     Wavelength en np.ndarray
-    mascara(opcional) en np.ndarray bool. Si no hay se se genera una con todos los pixeles
+    mascara(opcional) en np.ndarray bool. Si no hay se se genera una con todos los pixeles.
     """
     def __init__(self,  img:np.ndarray, WV:np.ndarray, mask=None, ylabels=None):
         self.img = img
@@ -86,14 +86,14 @@ class ImagenHyper:
  
 
     def add_label(self, ylabels:np.array, labelled_coords:np.array):
-
+        """Añade las y_labels, lablled_coords, y busca los espectros de las coordenadas"""
         self.ylabels = np.asarray(ylabels)
         self.labelled_coords = np.asarray(labelled_coords)
         self.labelled_spectra = self.img[labelled_coords[:, 0], labelled_coords[:, 1], :]
         self.is_labeled = True
 
     def _update_mask_data(self):
-        """actualiza llos datos con la mascara nueva"""
+        """Actualiza llos datos con la mascara nueva"""
         self.masked_coords = np.argwhere(self.mask)
         self.masked_spectra = self.spectra[self.mask.ravel()]
     def add_mask(self, mask):
@@ -102,10 +102,11 @@ class ImagenHyper:
         self._update_mask_data()
     def slicer(self, modo="auto",        fila_ini=None,        fila_fin=None,     col_ini=None,col_fin=None, margin=5):
         """Hace un recorte rectangular de la imagen"""
+            # que no te deje si no tiene nada
         if modo == "manual":
             if None in (fila_ini, fila_fin, col_ini, col_fin):
                 raise ValueError("modo='manual' requiere límites completos")
-
+# busca las columnas para conservar
         elif modo == "auto":
             filas, cols = np.where(self.mask)
 
@@ -117,9 +118,10 @@ class ImagenHyper:
 
         else:
             raise ValueError("modo debe ser 'manual' o 'auto'")
-
+# recorta imagen
         img_crop = self.img[fila_ini:fila_fin, col_ini:col_fin, :]
         mask_crop = self.mask[fila_ini:fila_fin, col_ini:col_fin]
+        # genera 
         new_img = ImagenHyper(
         img=img_crop,
         WV=self.WV,

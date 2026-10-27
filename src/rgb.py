@@ -28,7 +28,7 @@ def imagen_prediccion(y, coords, image_shape, out=False):
         0: [0, 0, 0],
         1: [255, 0, 0],
         2: [0, 255, 0],
-        3: [0, 0, 255]
+        3: [0, 0, 205]
     }
 
     coords = np.asarray(coords)
