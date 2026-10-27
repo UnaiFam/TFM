@@ -1,7 +1,4 @@
 # TFM
-Codigo del Trabajo de Fin de Grado reescrito en Python.
-Originalmente este proyecto se escribio en MATLAB utilizando la *classication toolbox* la gui de *hypertools*. 
-
 El proyecto consistía en el desarrollo y optimización de un flujo de trabajo para la identificación de de imagenes hiperspectrales.
 El trabajo utilizaba imágenes adquiridas con una cámara SWIR de SPECIM, que generaba archivos con extensión .hdr y sus correspondientes datos asociados.
 Este proyecto consiste en una adaptación del flujo de trabajo a Python mediante las bibliotecas scikit-learn, pandas y numpy. Por tanto, no se analizarán en detalle las razones detrás de las decisiones metodológicas.
@@ -231,4 +228,5 @@ Dos modos:
 * **`full`**: predice tambien el fondo. Suele funcionar bien pero en ocasiones es practicamente inutil  prediciendo gran parte del fondo como la clase.
 
 ![Texto alternativo](img\generated\ejemplo.png)
+
 
