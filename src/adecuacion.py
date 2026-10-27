@@ -1,10 +1,13 @@
 import numpy as np
 import spectral as sp
+import pickle
 
 
 
+def corrector(ruta_imagen:str,ruta_negro:str,ruta_blanco:str):
+    """Funcion que utiliza busca la ruta de la imagen, del negro y del blanco. 
+    Devuelve un np.array tridimensional y np.array unidimensional de para wavelength.  """
 
-def corrector(ruta_imagen,ruta_negro,ruta_blanco):
     imagen_hiperespectral = sp.open_image(ruta_imagen).load()
 
     # Cargar el cubo completo en memoria
@@ -12,10 +15,6 @@ def corrector(ruta_imagen,ruta_negro,ruta_blanco):
     imagen_negro =  sp.open_image(ruta_negro).load()                  
     imagen_blanco = sp.open_image(ruta_blanco).load()
    
-    print(imagen_hiperespectral.shape,imagen_blanco.shape, imagen_blanco.shape )
-
-    im_largo, im_ancho, im_bandas=imagen_hiperespectral.shape
-
 
     imagen_negro_mean=imagen_negro.mean(axis=0)
     imagen_blanco_mean=imagen_blanco.mean(axis=0)
@@ -63,105 +62,53 @@ def replace_from_coords(
 
     return new_img
 
-
 class ImagenHyper:
-
-    def __init__(self, name:str, img:np.array, WV, mask=None, ylabels=None):
-
-        self.name = name
+    """Clase de datos para imagen hiperespectral. 
+    imagen en np.ndarray
+    Wavelength en np.ndarray
+    mascara(opcional) en np.ndarray bool. Si no hay se se genera una con todos los pixeles.
+    """
+    def __init__(self,  img:np.ndarray, WV:np.ndarray, mask=None, ylabels=None):
         self.img = img
         self.shape = img.shape
         self.WV=WV
         self.spectra = img2matrix(img)
         H, W = img.shape[:2]
-        self.coords = np.indices((H, W)).reshape(2, -1).T
-
+        self.coords= np.indices((H, W)).reshape(2, -1).T
         if mask is None:
             self.mask = np.ones(img.shape[:2], dtype=bool).astype(bool)
         else:
             self.mask = mask
+        self._update_mask_data()
 
         self.ylabels = ylabels
-        
+        self.is_labeled = ylabels is not None
+ 
 
-        self.spectra_coords= np.argwhere(self.img!=False)
-        self.masked_coords =np.argwhere(self.mask)
-        self.masked_spectra=img[self.mask]
+    def add_label(self, ylabels:np.array, labelled_coords:np.array):
+        """Añade las y_labels, lablled_coords, y busca los espectros de las coordenadas"""
+        self.ylabels = np.asarray(ylabels)
+        self.labelled_coords = np.asarray(labelled_coords)
+        self.labelled_spectra = self.img[labelled_coords[:, 0], labelled_coords[:, 1], :]
+        self.is_labeled = True
 
-
-        
-        if self.ylabels!=None:
-            self.ylabels= False
-        else:
-            self.ylabels= True
-
-
-
-    def add_label(self, ylabels, labelled_coords):
-        self.ylabels = ylabels 
-        self.labelled_coords=labelled_coords
-
-        self.labelled_spectra = []
-
-        for coords in labelled_coords:
-            spectra_obj = []
-
-            for y, x in coords:
-                # caso imagen H x W x bands
-                spectra_obj.append(self.img[y, x, :])
-
-        self.labelled_spectra.append(np.array(spectra_obj))
-        
-
-    def add_plastics(self):
-        pass
-
-
-
-
+    def _update_mask_data(self):
+        """Actualiza llos datos con la mascara nueva"""
+        self.masked_coords = np.argwhere(self.mask)
+        self.masked_spectra = self.spectra[self.mask.ravel()]
     def add_mask(self, mask):
-
-        # asegurar forma correcta
-        if mask.shape != self.img.shape[:2]:
-            raise ValueError(
-                f"Mask shape {mask.shape} != image shape {self.img.shape[:2]}"
-            )
-
-        # forzar booleano limpio
-        mask = mask.astype(bool)
-
-        self.mask = mask
-        self.masked_coords = np.argwhere(mask)
-
-        # ESTO ES CORRECTO SOLO SI mask es (H,W)
-        self.masked_spectra = self.img[mask]
-
-    
-
-        
-
-    def slicer(
-        self,
-        modo="auto",
-        fila_ini=None,
-        fila_fin=None,
-        col_ini=None,
-        col_fin=None,
-    ):
-
+        """Añade la mascara"""
+        self.mask=np.asarray(mask, bool)
+        self._update_mask_data()
+    def slicer(self, modo="auto",        fila_ini=None,        fila_fin=None,     col_ini=None,col_fin=None, margin=5):
+        """Hace un recorte rectangular de la imagen"""
+            # que no te deje si no tiene nada
         if modo == "manual":
-
-            img_crop = self.img[fila_ini:fila_fin,
-                                col_ini:col_fin, :]
-
-            mask_crop = self.mask[fila_ini:fila_fin,
-                                  col_ini:col_fin]
-
+            if None in (fila_ini, fila_fin, col_ini, col_fin):
+                raise ValueError("modo='manual' requiere límites completos")
+# busca las columnas para conservar
         elif modo == "auto":
-
             filas, cols = np.where(self.mask)
-
-            margin = 5
 
             fila_ini = max(filas.min() - margin, 0)
             fila_fin = min(filas.max() + margin, self.img.shape[0])
@@ -169,21 +116,39 @@ class ImagenHyper:
             col_ini = max(cols.min() - margin, 0)
             col_fin = min(cols.max() + margin, self.img.shape[1])
 
-            img_crop = self.img[fila_ini:fila_fin,
-                                col_ini:col_fin, :]
-
-            mask_crop = self.mask[fila_ini:fila_fin,
-                                  col_ini:col_fin]
-
         else:
             raise ValueError("modo debe ser 'manual' o 'auto'")
+# recorta imagen
+        img_crop = self.img[fila_ini:fila_fin, col_ini:col_fin, :]
+        mask_crop = self.mask[fila_ini:fila_fin, col_ini:col_fin]
+        # genera 
+        new_img = ImagenHyper(
+        img=img_crop,
+        WV=self.WV,
+        mask=mask_crop)
 
-        return ImagenHyper(
-            name=f"{self.name}_crop",
-            img=img_crop,
-            WV=self.WV,
-            mask=mask_crop,
-            ylabels=self.ylabels
-        )
-    
+        if self.is_labeled:
+            inside = (
+                (self.labelled_coords[:, 0] >= fila_ini) &
+                (self.labelled_coords[:, 0] < fila_fin) &
+                (self.labelled_coords[:, 1] >= col_ini) &
+                (self.labelled_coords[:, 1] < col_fin)
+            )
+
+            if np.any(inside):
+
+                new_coords = self.labelled_coords[inside].copy()
+
+                # Coordenadas relativas al recorte
+                new_coords[:, 0] -= fila_ini
+                new_coords[:, 1] -= col_ini
+
+                new_labels = self.ylabels[inside]
+
+                new_img.add_label(
+                    ylabels=new_labels,
+                    labelled_coords=new_coords
+                )
+
+        return new_img
 
